@@ -52,6 +52,7 @@ public class OpenCamera extends AppCompatActivity {
     private SleepAlertService sleepAlertService;
     private TextView drowsinessInfo;
     private String server_url = "http://10.100.1.90:8000/";
+    private String[] sleep_message = new String[]{"양호", "약간 졸림", "많이 졸림", "수면"};
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -139,7 +140,7 @@ public class OpenCamera extends AppCompatActivity {
 
                 // 프레임 카운트를 증가시키고 10프레임마다 서버로 전송
                 frameCount++;
-                if (frameCount % 3 == 0) {
+                if (frameCount % 15 == 0) {
                     sendImageToServer(jpegData);  // 10프레임마다 서버로 전송
                     frameCount = 0;
                 }
@@ -204,9 +205,9 @@ public class OpenCamera extends AppCompatActivity {
 
                         // UI 업데이트는 메인 스레드에서 실행
                         runOnUiThread(() -> {
-                            drowsinessInfo.setText("Sleep Level : " + sleep_level);
+                            drowsinessInfo.setText("현재 상태 : " + sleep_message[sleep_level]);
                             sleepAlertService.setSleepState(sleep_level);
-                            Toast.makeText(OpenCamera.this, "close : " + close_count, Toast.LENGTH_SHORT).show();
+//                            Toast.makeText(OpenCamera.this, "close : " + close_count, Toast.LENGTH_SHORT).show();
                         });
                     } catch (JSONException e) {
                         e.printStackTrace();

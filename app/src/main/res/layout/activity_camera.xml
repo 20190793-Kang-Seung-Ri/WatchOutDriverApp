@@ -37,7 +37,7 @@
         android:id="@+id/drowsinessInfo"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:text="Sleep Level : 0"
+        android:text="현재 상태 : "
         android:textColor="#FFFFFF"
         android:textSize="50sp"
         android:textStyle="bold"

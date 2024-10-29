@@ -32,7 +32,10 @@ public class SleepAlertService {
                 playVoiceMessage("window_open_stretch", false);
                 break;
             case 2:
-                playVoiceMessage("rest_area_warning", true);
+                playVoiceMessage("rest_area_warning", false);
+                break;
+            case 3:
+                playVoiceMessage("alarm", true);
                 break;
             default:
                 stopAlert();
