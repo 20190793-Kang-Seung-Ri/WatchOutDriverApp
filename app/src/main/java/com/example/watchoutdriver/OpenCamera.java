@@ -51,6 +51,7 @@ public class OpenCamera extends AppCompatActivity {
     private int frameCount = 0; // 프레임 카운트 변수 추가
     private SleepAlertService sleepAlertService;
     private TextView drowsinessInfo;
+    private String server_url = "http://10.100.1.90:8000/";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,6 +61,7 @@ public class OpenCamera extends AppCompatActivity {
         drowsinessInfo = findViewById(R.id.drowsinessInfo);
 
         sleepAlertService = new SleepAlertService(this); // 서비스 초기화
+        sendInitializationRequest();
         requestCameraPermission();
         checkCameraFormats(this);
     }
@@ -137,7 +139,7 @@ public class OpenCamera extends AppCompatActivity {
 
                 // 프레임 카운트를 증가시키고 10프레임마다 서버로 전송
                 frameCount++;
-                if (frameCount % 30 == 0) {
+                if (frameCount % 3 == 0) {
                     sendImageToServer(jpegData);  // 10프레임마다 서버로 전송
                     frameCount = 0;
                 }
@@ -170,7 +172,7 @@ public class OpenCamera extends AppCompatActivity {
                 .build();
 
         Request request = new Request.Builder()
-                .url("http://192.168.137.1:8000/process_video/") // URL을 올바르게 설정하세요
+                .url(server_url + "process_video/") // URL을 올바르게 설정하세요
                 .post(requestBody)
                 .build();
 
@@ -204,6 +206,7 @@ public class OpenCamera extends AppCompatActivity {
                         runOnUiThread(() -> {
                             drowsinessInfo.setText("Sleep Level : " + sleep_level);
                             sleepAlertService.setSleepState(sleep_level);
+                            Toast.makeText(OpenCamera.this, "close : " + close_count, Toast.LENGTH_SHORT).show();
                         });
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -212,6 +215,41 @@ public class OpenCamera extends AppCompatActivity {
                     Log.d("ServerResponse", "Image send failed: " + response.message());
                     runOnUiThread(() -> Toast.makeText(OpenCamera.this,
                             "서버 오류: " + response.message(), Toast.LENGTH_SHORT).show()); // 서버 오류 시 메시지
+                }
+            }
+        });
+    }
+
+    private void sendInitializationRequest() {
+        OkHttpClient client = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(server_url + "initialize/") // 서버 초기화 URL
+                .post(RequestBody.create(null, new byte[0])) // 빈 요청 본문
+                .build();
+
+        client.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(Call call, IOException e) {
+                Log.e("InitRequestError", "초기화 요청 실패: " + e.getMessage());
+                runOnUiThread(() -> Toast.makeText(OpenCamera.this,
+                        "서버 초기화 실패", Toast.LENGTH_SHORT).show());
+            }
+
+            @Override
+            public void onResponse(Call call, Response response) throws IOException {
+                if (response.isSuccessful()) {
+                    Log.d("InitRequestSuccess", "서버 초기화 성공");
+                    runOnUiThread(() -> Toast.makeText(OpenCamera.this,
+                            "서버 초기화 성공", Toast.LENGTH_SHORT).show());
+                } else {
+                    Log.e("InitRequestError", "서버 초기화 실패: " + response.message());
+                    runOnUiThread(() -> Toast.makeText(OpenCamera.this,
+                            "서버 초기화 실패: " + response.message(), Toast.LENGTH_SHORT).show());
                 }
             }
         });

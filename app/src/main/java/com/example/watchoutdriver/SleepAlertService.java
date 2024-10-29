@@ -29,11 +29,10 @@ public class SleepAlertService {
         // 단계별 음성 및 알림 출력
         switch (sleepState) {
             case 1:
-                playVoiceMessage("window_open_stretch");
+                playVoiceMessage("window_open_stretch", false);
                 break;
             case 2:
-                playVoiceMessage("rest_area_warning");
-//                playWarningSound();
+                playVoiceMessage("rest_area_warning", true);
                 break;
             default:
                 stopAlert();
@@ -44,19 +43,26 @@ public class SleepAlertService {
         handler.postDelayed(() -> playAlert(sleepState), 60000);
     }
 
-    private void playVoiceMessage(String message) {
+    private void playVoiceMessage(String message, boolean playWarningAfter) {
         // message에 따라 미디어 파일 선택 (예: "window_open_stretch"와 "rest_area_warning")
         int resId = context.getResources().getIdentifier(message, "raw", context.getPackageName());
         if (resId != 0) {
             mediaPlayer.reset();
             mediaPlayer = MediaPlayer.create(context, resId);
             mediaPlayer.start();
+
+            // 메시지 재생이 완료된 후 경보음을 재생하도록 설정
+            mediaPlayer.setOnCompletionListener(mp -> {
+                if (playWarningAfter) {
+                    playWarningSound(); // 메시지 재생 후 경보음 재생
+                }
+            });
         }
     }
 
     private void playWarningSound() {
         // 경보음을 위한 미디어 파일 재생 (경고음 파일을 raw 폴더에 저장)
-        int resId = context.getResources().getIdentifier("alarm_sound", "raw", context.getPackageName());
+        int resId = context.getResources().getIdentifier("alarm", "raw", context.getPackageName());
         if (resId != 0) {
             mediaPlayer.reset();
             mediaPlayer = MediaPlayer.create(context, resId);
