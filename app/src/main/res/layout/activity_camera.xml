@@ -38,7 +38,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:text="현재 상태 : "
-        android:textColor="#FFFFFF"
+        android:textColor="#DEE0E4"
         android:textSize="50sp"
         android:textStyle="bold"
         app:layout_constraintBottom_toBottomOf="parent"

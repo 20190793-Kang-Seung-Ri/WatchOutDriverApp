@@ -1,5 +1,11 @@
 package com.example.watchoutdriver;
 
+import android.os.Handler;
+import android.content.DialogInterface;
+import android.view.View;
+
+import androidx.appcompat.app.AlertDialog; // Import for AlertDialog
+
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.hardware.camera2.CameraAccessException;
@@ -51,8 +57,14 @@ public class OpenCamera extends AppCompatActivity {
     private int frameCount = 0; // 프레임 카운트 변수 추가
     private SleepAlertService sleepAlertService;
     private TextView drowsinessInfo;
-    private String server_url = "http://10.100.1.90:8000/";
-    private String[] sleep_message = new String[]{"양호", "약간 졸림", "많이 졸림", "수면"};
+    private String server_url = "http://34.64.80.214:8000/";
+    private String[] sleep_message = {"양호", "약간 졸림", "많이 졸림", "수면"};
+    private int[] sleep_message_color = {
+            0xFF00FF00, // 0: 양호 (Green)
+            0xFFFFFF00, // 1: 약간 졸림 (Yellow)
+            0xFFFFA500, // 2: 많이 졸림 (Orange)
+            0xFFFF0000  // 3: 수면 (Red)
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -140,7 +152,7 @@ public class OpenCamera extends AppCompatActivity {
 
                 // 프레임 카운트를 증가시키고 10프레임마다 서버로 전송
                 frameCount++;
-                if (frameCount % 15 == 0) {
+                if (frameCount % 5 == 0) {
                     sendImageToServer(jpegData);  // 10프레임마다 서버로 전송
                     frameCount = 0;
                 }
@@ -201,13 +213,13 @@ public class OpenCamera extends AppCompatActivity {
                         String filename = jsonResponse.getString("filename");
                         String message = jsonResponse.getString("message");
                         int sleep_level = jsonResponse.getInt("sleep_state");
-                        int close_count = jsonResponse.getInt("close_count");
+                        Double close_count = jsonResponse.getDouble("close_count");
 
                         // UI 업데이트는 메인 스레드에서 실행
                         runOnUiThread(() -> {
                             drowsinessInfo.setText("현재 상태 : " + sleep_message[sleep_level]);
+                            drowsinessInfo.setTextColor(sleep_message_color[sleep_level]);
                             sleepAlertService.setSleepState(sleep_level);
-//                            Toast.makeText(OpenCamera.this, "close : " + close_count, Toast.LENGTH_SHORT).show();
                         });
                     } catch (JSONException e) {
                         e.printStackTrace();
