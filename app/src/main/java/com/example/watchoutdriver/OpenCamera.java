@@ -65,6 +65,9 @@ public class OpenCamera extends AppCompatActivity {
             0xFFFFA500, // 2: 많이 졸림 (Orange)
             0xFFFF0000  // 3: 수면 (Red)
     };
+    private int[] sleepLevelCount = {0, 0, 0, 0};
+    private boolean AlertShown = false;
+    private boolean isBlinking = false; // 깜빡임 상태를 추적할 변수
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -213,13 +216,13 @@ public class OpenCamera extends AppCompatActivity {
                         String filename = jsonResponse.getString("filename");
                         String message = jsonResponse.getString("message");
                         int sleep_level = jsonResponse.getInt("sleep_state");
-                        Double close_count = jsonResponse.getDouble("close_count");
+                        int close_count = jsonResponse.getInt("close_count");
 
                         // UI 업데이트는 메인 스레드에서 실행
                         runOnUiThread(() -> {
-                            drowsinessInfo.setText("현재 상태 : " + sleep_message[sleep_level]);
+                            drowsinessInfo.setText("현재 상태 : " + sleep_message[sleep_level] + close_count);
                             drowsinessInfo.setTextColor(sleep_message_color[sleep_level]);
-                            sleepAlertService.setSleepState(sleep_level);
+                            onResponseFromServer(sleep_level);
                         });
                     } catch (JSONException e) {
                         e.printStackTrace();
@@ -231,6 +234,96 @@ public class OpenCamera extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    private void onResponseFromServer(int sleep_level) {
+        if (sleep_level == 3) {
+            // 3단계에서는 즉시 알림
+            sleepAlertService.setSleepState(sleep_level);
+
+            // 처음 수면 상태 시 알림 창 표시
+            if (!AlertShown) {
+                showSleepAlert();
+                AlertShown = true; // 알림창을 한 번만 띄우도록 설정
+            }
+
+            blinkText();
+            resetSleepLevelCounts();
+        } else {
+            AlertShown = false; // 수면 단계가 아닐 때는 플래그 초기화
+            stopBlinkingText(); // 다른 단계에서는 깜빡임 중지
+
+            if (sleep_level == 1) {
+                // 1단계는 60회 카운트 후 알림
+                sleepLevelCount[sleep_level]++;
+                if (sleepLevelCount[sleep_level] >= 60) { // 1초에 6장
+                    sleepAlertService.setSleepState(sleep_level);
+                    resetSleepLevelCounts();
+                }
+            } else if (sleep_level == 2) {
+                // 2단계는 30회 카운트 후 알림
+                sleepLevelCount[sleep_level]++;
+                if (sleepLevelCount[sleep_level] >= 30) {
+                    sleepAlertService.setSleepState(sleep_level);
+                    resetSleepLevelCounts();
+                }
+            } else if (sleep_level == 0) {
+                sleepAlertService.setSleepState(sleep_level);
+                sleepLevelCount[sleep_level]++;
+                if (sleepLevelCount[sleep_level] >= 180) {
+                    sleepAlertService.setSleepState(sleep_level);
+                    resetSleepLevelCounts();
+                }
+            }
+        }
+    }
+
+    private void showSleepAlert() {
+        runOnUiThread(() -> {
+            new AlertDialog.Builder(OpenCamera.this)
+                    .setTitle("경고")
+                    .setMessage("현재 수면 상태입니다. 주의가 필요합니다!")
+                    .setPositiveButton("확인", (dialog, which) -> dialog.dismiss())
+                    .setCancelable(false)
+                    .show();
+        });
+    }
+
+    // 모든 sleepLevelCount를 초기화하는 함수
+    private void resetSleepLevelCounts() {
+        for (int i = 0; i < sleepLevelCount.length; i++) {
+            sleepLevelCount[i] = 0;
+        }
+    }
+
+    // 수면 단계일 때 텍스트를 깜빡이게 하는 메서드
+    private void blinkText() {
+        final Handler handler = new Handler();
+        isBlinking = true;
+
+        Runnable runnable = new Runnable() {
+            boolean visible = true; // 텍스트 가시성 상태를 추적
+
+            @Override
+            public void run() {
+                if (!isBlinking) return; // 수면 단계가 아니면 깜빡임 중지
+
+                // 텍스트 가시성을 토글
+                drowsinessInfo.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+                visible = !visible; // 가시성 전환
+
+                // 500ms 후 다시 실행
+                handler.postDelayed(this, 500);
+            }
+        };
+
+        handler.post(runnable);
+    }
+
+    // 깜빡임을 멈추는 메서드
+    private void stopBlinkingText() {
+        isBlinking = false;
+        drowsinessInfo.setVisibility(View.VISIBLE); // 가시성을 항상 표시로 설정
     }
 
     private void sendInitializationRequest() {

@@ -35,4 +35,8 @@
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">34.64.80.214</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
     </domain-config>
+
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="true">192.168.0.14</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
+    </domain-config>
 </network-security-config>

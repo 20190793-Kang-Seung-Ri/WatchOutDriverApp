@@ -22,7 +22,7 @@ public class SleepAlertService {
         currentSleepState = sleepState;
 
         handler.removeCallbacksAndMessages(null); // 기존 실행 취소
-        handler.postDelayed(() -> playAlert(sleepState), 0); // 바로 알림 실행
+        playAlert(sleepState); // 바로 알림 실행
     }
 
     private void playAlert(int sleepState) {
@@ -35,15 +35,12 @@ public class SleepAlertService {
                 playVoiceMessage("rest_area_warning", false);
                 break;
             case 3:
-                playVoiceMessage("alarm", true);
+                playVoiceMessage("alarm", false);
                 break;
             default:
                 stopAlert();
                 break;
         }
-
-        // 1분 간격 반복
-        handler.postDelayed(() -> playAlert(sleepState), 60000);
     }
 
     private void playVoiceMessage(String message, boolean playWarningAfter) {
