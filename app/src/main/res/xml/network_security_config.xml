@@ -1,42 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">192.168.137.1</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
+        <domain includeSubdomains="true">192.168.1.46</domain> <!-- soldesk 4 CLASS 1 5G -->
     </domain-config>
 
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">192.168.0.15</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
+        <domain includeSubdomains="true">34.64.80.214</domain> <!-- 채원이 서버 -->
     </domain-config>
 
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">10.100.1.90</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
-    </domain-config>
-
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">192.168.1.46</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
-    </domain-config>
-
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">172.30.1.15</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
-    </domain-config>
-
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">10.144.154.246</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
-    </domain-config>
-
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">172.20.10.2</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
-    </domain-config>
-
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">172.20.10.5</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
-    </domain-config>
-
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">34.64.80.214</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
-    </domain-config>
-
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">192.168.0.14</domain> <!-- 여기에 서버 IP 주소를 입력하세요 -->
+        <domain includeSubdomains="true">172.30.1.85</domain> <!-- KT_GiGA_3866 -->
     </domain-config>
 </network-security-config>

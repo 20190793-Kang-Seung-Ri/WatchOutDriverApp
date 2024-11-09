@@ -55,9 +55,10 @@ import android.Manifest;  // 권한 사용을 위한 import
 public class OpenCamera extends AppCompatActivity {
     private PreviewView previewView;
     private int frameCount = 0; // 프레임 카운트 변수 추가
+    private int frame_send_count = 15;
     private SleepAlertService sleepAlertService;
     private TextView drowsinessInfo;
-    private String server_url = "http://34.64.80.214:8000/";
+    private String server_url = "http://172.30.1.85:8000/";
     private String[] sleep_message = {"양호", "약간 졸림", "많이 졸림", "수면"};
     private int[] sleep_message_color = {
             0xFF00FF00, // 0: 양호 (Green)
@@ -146,16 +147,16 @@ public class OpenCamera extends AppCompatActivity {
 
             if (bitmap != null) {
                 // Bitmap을 처리
-                Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, 224, 224, false);
+//                Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap, 224, 224, false);
 
                 // JPG로 압축
                 ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-                resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream); // 품질을 85로 조정
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 85, outputStream); // 품질을 85로 조정
                 byte[] jpegData = outputStream.toByteArray();
 
                 // 프레임 카운트를 증가시키고 10프레임마다 서버로 전송
                 frameCount++;
-                if (frameCount % 5 == 0) {
+                if (frameCount % frame_send_count == 0) {
                     sendImageToServer(jpegData);  // 10프레임마다 서버로 전송
                     frameCount = 0;
                 }
@@ -243,14 +244,12 @@ public class OpenCamera extends AppCompatActivity {
 
             // 처음 수면 상태 시 알림 창 표시
             if (!AlertShown) {
-                showSleepAlert();
-                AlertShown = true; // 알림창을 한 번만 띄우도록 설정
+                showSleepAlert(sleep_level); // 알림창 표시 및 경고음 반복 재생 시작
             }
 
             blinkText();
             resetSleepLevelCounts();
         } else {
-            AlertShown = false; // 수면 단계가 아닐 때는 플래그 초기화
             stopBlinkingText(); // 다른 단계에서는 깜빡임 중지
 
             if (sleep_level == 1) {
@@ -268,7 +267,7 @@ public class OpenCamera extends AppCompatActivity {
                     resetSleepLevelCounts();
                 }
             } else if (sleep_level == 0) {
-                sleepAlertService.setSleepState(sleep_level);
+                // 졸음 레벨이 0일 때 알림 멈추지 않도록 처리
                 sleepLevelCount[sleep_level]++;
                 if (sleepLevelCount[sleep_level] >= 180) {
                     sleepAlertService.setSleepState(sleep_level);
@@ -278,14 +277,34 @@ public class OpenCamera extends AppCompatActivity {
         }
     }
 
-    private void showSleepAlert() {
+    private void showSleepAlert(int sleep_level) {
         runOnUiThread(() -> {
+            // 알림창이 닫히기 전까지 소리를 반복 재생
+            Handler handler = new Handler();
+            Runnable soundRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (AlertShown) { // 알림창이 열려 있는 동안만 반복 재생
+                        sleepAlertService.playAlert(sleep_level);
+                        handler.postDelayed(this, 2100); // 2초마다 재생
+                    }
+                }
+            };
+            handler.post(soundRunnable); // 첫 실행
+
             new AlertDialog.Builder(OpenCamera.this)
                     .setTitle("경고")
                     .setMessage("현재 수면 상태입니다. 주의가 필요합니다!")
-                    .setPositiveButton("확인", (dialog, which) -> dialog.dismiss())
+                    .setPositiveButton("확인", (dialog, which) -> {
+                        dialog.dismiss();
+                        AlertShown = false; // 알림 창 닫기
+                        sleepAlertService.stopAlert(); // 소리 멈춤
+                        handler.removeCallbacks(soundRunnable); // 반복 재생 중지
+                    })
                     .setCancelable(false)
                     .show();
+
+            AlertShown = true; // 알림창 표시 상태
         });
     }
 
