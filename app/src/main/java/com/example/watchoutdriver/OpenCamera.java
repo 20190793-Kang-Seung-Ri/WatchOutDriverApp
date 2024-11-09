@@ -58,7 +58,7 @@ public class OpenCamera extends AppCompatActivity {
     private int frame_send_count = 15;
     private SleepAlertService sleepAlertService;
     private TextView drowsinessInfo;
-    private String server_url = "http://172.30.1.85:8000/";
+    private String server_url = "http://34.64.80.214:8000/";
     private String[] sleep_message = {"양호", "약간 졸림", "많이 졸림", "수면"};
     private int[] sleep_message_color = {
             0xFF00FF00, // 0: 양호 (Green)
