@@ -55,7 +55,7 @@ import android.Manifest;  // 권한 사용을 위한 import
 public class OpenCamera extends AppCompatActivity {
     private PreviewView previewView;
     private int frameCount = 0; // 프레임 카운트 변수 추가
-    private int frame_send_count = 15;
+    private int frame_send_count = 5;
     private SleepAlertService sleepAlertService;
     private TextView drowsinessInfo;
     private String server_url = "http://34.64.80.214:8000/";
@@ -63,12 +63,14 @@ public class OpenCamera extends AppCompatActivity {
     private int[] sleep_message_color = {
             0xFF00FF00, // 0: 양호 (Green)
             0xFFFFFF00, // 1: 약간 졸림 (Yellow)
-            0xFFFFA500, // 2: 많이 졸림 (Orange)
+            0xFFFFA500, // 2: 많이 졸림 (Orange) 
             0xFFFF0000  // 3: 수면 (Red)
     };
     private int[] sleepLevelCount = {0, 0, 0, 0};
     private boolean AlertShown = false;
     private boolean isBlinking = false; // 깜빡임 상태를 추적할 변수
+    private long lastAlertTime = 0; // 마지막 알림창 표시 시간 기록
+    private static final long ALERT_DELAY = 7500; // 5초 지연
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -221,7 +223,7 @@ public class OpenCamera extends AppCompatActivity {
 
                         // UI 업데이트는 메인 스레드에서 실행
                         runOnUiThread(() -> {
-                            drowsinessInfo.setText("현재 상태 : " + sleep_message[sleep_level] + close_count);
+                            drowsinessInfo.setText("현재 상태 : " + sleep_message[sleep_level]);
                             drowsinessInfo.setTextColor(sleep_message_color[sleep_level]);
                             onResponseFromServer(sleep_level);
                         });
@@ -238,12 +240,22 @@ public class OpenCamera extends AppCompatActivity {
     }
 
     private void onResponseFromServer(int sleep_level) {
+
+
         if (sleep_level == 3) {
             // 3단계에서는 즉시 알림
             sleepAlertService.setSleepState(sleep_level);
 
             // 처음 수면 상태 시 알림 창 표시
             if (!AlertShown) {
+                long currentTime = System.currentTimeMillis();
+
+                // 마지막 알림이 표시된 지 5초가 지나지 않았다면 알림을 무시함
+                if (currentTime - lastAlertTime < ALERT_DELAY) {
+                    return;
+                }
+
+                lastAlertTime = currentTime; // 알림 표시 시간 업데이트
                 showSleepAlert(sleep_level); // 알림창 표시 및 경고음 반복 재생 시작
             }
 
